@@ -54,7 +54,7 @@ def train(agent, env, replay, logger, args):
         stats[f'max_{key}'] = ep[key].max(0).mean()
     metrics.add(stats, prefix='stats')
 
-  driver = embodied.Driver(env)
+  driver = embodied.Driver(env, mode="train")
   driver.on_episode(lambda ep, worker: per_episode(ep))
   driver.on_step(lambda tran, _: step.increment())
   driver.on_step(replay.add)

@@ -16,7 +16,7 @@ class Checkpoint:
       self._worker = concurrent.futures.ThreadPoolExecutor(1)
       self._promise = None
 
-  def __setattr__(self, name, value):
+  def __setattr__(self, name, value): # call when attribute is set
     if name in ('exists', 'save', 'load'):
       return super().__setattr__(name, value)
     if name.startswith('_'):
@@ -28,11 +28,15 @@ class Checkpoint:
       raise ValueError(message)
     self._values[name] = value
 
-  def __getattr__(self, name):
+  def __getattr__(self, name): # call when attribute not found
     if name.startswith('_'):
       raise AttributeError(name)
     try:
-      return getattr(self._values, name)
+      # print("values:", self._values)
+      # print("name:", name)
+      # print("attr:", self._values[name])
+      # return getattr(self._values, name)
+      return self._values[name]
     except AttributeError:
       raise ValueError(name)
 
@@ -74,6 +78,7 @@ class Checkpoint:
     self._log and print(f'Loading checkpoint: {filename}')
     data = basics.unpack(filename.read('rb'))
     keys = tuple(data.keys() if keys is None else keys)
+    # print(f"data_keys:{keys}")
     for key in keys:
       if key.startswith('_'):
         continue

@@ -4,6 +4,7 @@ import numpy as np
 
 from .basics import convert
 
+import imageio
 
 class Driver:
 
@@ -14,12 +15,16 @@ class Driver:
       bool: bool,
   }
 
-  def __init__(self, env, **kwargs):
+  def __init__(self, env, mode, **kwargs):
     assert len(env) > 0
     self._env = env
+    self._mode = mode
     self._kwargs = kwargs
     self._on_steps = []
     self._on_episodes = []
+    self._frames = []
+    self._cnt = 0
+    self._video_name_index = 0
     self.reset()
 
   def reset(self):
@@ -45,6 +50,21 @@ class Driver:
     assert all(len(x) == len(self._env) for x in self._acts.values())
     acts = {k: v for k, v in self._acts.items() if not k.startswith('log_')}
     obs = self._env.step(acts)
+    
+    if self._mode == "eval":
+      if self._cnt == 0:
+        self._writer = imageio.get_writer(f"./dreamerv3/video{self._video_name_index}.mp4", fps=20)
+      frame = np.squeeze(obs["agentview_image"])
+      self._cnt += 1
+      print(f"append {self._cnt} frame")
+      self._writer.append_data(frame)
+      if self._cnt == 150:
+        self._writer.close()
+        self._cnt = 0
+        self._video_name_index += 1
+        self._frames = []
+        print("video saved")
+    
     obs = {k: convert(v) for k, v in obs.items()}
     assert all(len(x) == len(self._env) for x in obs.values()), obs
     acts, self._state = policy(obs, self._state, **self._kwargs)
