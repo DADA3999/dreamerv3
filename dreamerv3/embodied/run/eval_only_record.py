@@ -4,8 +4,9 @@ import embodied
 import numpy as np
 
 
-def eval_only_record(agent, env, logger, args):
-
+def eval_only_record(agent, env, env_rec, logger, args):
+  
+  
   logdir = embodied.Path(args.logdir)
   logdir.mkdirs()
   print('Logdir', logdir)
@@ -42,7 +43,7 @@ def eval_only_record(agent, env, logger, args):
         stats[f'max_{key}'] = ep[key].max(0).mean()
     metrics.add(stats, prefix='stats')
 
-  driver = embodied.Driver(env, mode="eval")
+  driver = embodied.Driver(env, mode="eval", env_rec=env_rec)
   driver.on_episode(lambda ep, worker: per_episode(ep))
   driver.on_step(lambda tran, _: step.increment())
 

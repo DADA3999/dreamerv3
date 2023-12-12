@@ -15,15 +15,16 @@ class Driver:
       bool: bool,
   }
 
-  def __init__(self, env, mode, **kwargs):
+  def __init__(self, env, mode, env_rec=None, **kwargs):
     assert len(env) > 0
     self._env = env
     self._mode = mode
+    self._env_rec = env_rec
     self._kwargs = kwargs
     self._on_steps = []
     self._on_episodes = []
     self._frames = []
-    self._cnt = 0
+    self._ep_cnt = -1
     self._video_name_index = 0
     self.reset()
 
@@ -52,15 +53,18 @@ class Driver:
     obs = self._env.step(acts)
     
     if self._mode == "eval":
-      if self._cnt == 0:
+      obs_rec = self._env_rec.step(acts)
+      
+      if self._ep_cnt == -1:
         self._writer = imageio.get_writer(f"./dreamerv3/video{self._video_name_index}.mp4", fps=20)
-      frame = np.squeeze(obs["agentview_image"])
-      self._cnt += 1
-      print(f"append {self._cnt} frame")
+        self._ep_cnt = episode
+      frame = np.squeeze(obs_rec["frontview_image"])
       self._writer.append_data(frame)
-      if self._cnt == 150:
+      if self._ep_cnt != episode:
+        print(f"episode:{episode}")
         self._writer.close()
-        self._cnt = 0
+        self._writer = imageio.get_writer(f"./dreamerv3/video{self._video_name_index}.mp4", fps=20)
+        self._ep_cnt = episode
         self._video_name_index += 1
         self._frames = []
         print("video saved")
