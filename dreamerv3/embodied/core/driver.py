@@ -19,7 +19,6 @@ class Driver:
     assert len(env) > 0
     self._env = env
     self._mode = mode
-    self._env_rec = env_rec
     self._kwargs = kwargs
     self._on_steps = []
     self._on_episodes = []
@@ -54,25 +53,16 @@ class Driver:
     if self._mode == "eval":
       if self._ep_cnt == -1:
         self._writer = imageio.get_writer(f"./dreamerv3/video{self._video_name_index}.mp4", fps=20)
-        self._writer_rec = imageio.get_writer(f"./dreamerv3/video_rec{self._video_name_index}.mp4", fps=20)
         self._ep_cnt = 0
         
-      obs_rec = self._env_rec.step(acts)
-      
-      # frame = np.squeeze(obs_rec["frontview_image"])
       frame = np.squeeze(obs["frontview_image"])
-      frame_rec = np.squeeze(obs_rec["frontview_image"])
       self._writer.append_data(frame)
-      self._writer_rec.append_data(frame_rec)
       print("frame saved")
       if obs['is_last'].any():
         self._writer.append_data(frame)
         self._writer.close()
-        self._writer_rec.append_data(frame_rec)
-        self._writer_rec.close()
         self._video_name_index += 1
         self._writer = imageio.get_writer(f"./dreamerv3/video{self._video_name_index}.mp4", fps=20)
-        self._writer_rec = imageio.get_writer(f"./dreamerv3/video_rec{self._video_name_index}.mp4", fps=20)
         print("video saved")
     
     obs = {k: convert(v) for k, v in obs.items()}

@@ -69,31 +69,25 @@ def main():
     # )
     # camera_mover.move_camera(direction=[300.0, 3.0, 3.0], scale=1.0)
     # _ = env.reset()
-    env_rec = env.copy()
-    env_rec.camera_heights = 256
-    env_rec.camera_widths = 256
     
     env = GymWrapper(env, keys=['frontview_image']) # observation_space: Box(0, 255, (64, 64, 3), uint8)
     env = from_gym.FromGym(env, obs_key='frontview_image')  # Or obs_key='vector'.
     env = dreamerv3.wrap_env(env, config)
     env = embodied.BatchEnv([env], parallel=False)
     
-    env_rec = GymWrapper(env_rec, keys=['frontview_image']) # observation_space: Box(0, 255, (64, 64, 3), uint8)
-    env_rec = from_gym.FromGym(env_rec, obs_key='frontview_image')  # Or obs_key='vector'.
-    env_rec = dreamerv3.wrap_env(env_rec, config)
-    env_rec = embodied.BatchEnv([env_rec], parallel=False)
+    env_rec = env
 
     agent = dreamerv3.Agent(env.obs_space, env.act_space, step, config)
-    # replay = embodied.replay.Uniform(
-    #     config.batch_length, config.replay_size, logdir / "replay"
-    # )
+    replay = embodied.replay.Uniform(
+        config.batch_length, config.replay_size, logdir / "replay"
+    )
     args = embodied.Config(
         **config.run,
         logdir=config.logdir,
         batch_steps=config.batch_size * config.batch_length
     )
-    # embodied.run.train(agent, env, replay, logger, args)
-    embodied.run.eval_only_record(agent, env, env_rec, logger, args)
+    embodied.run.train(agent, env, replay, logger, args)
+    # embodied.run.eval_only_record(agent, env, env_rec, logger, args)
 
 
 if __name__ == "__main__":
