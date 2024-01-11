@@ -48,25 +48,16 @@ def eval_only_record(agent, env, env_rec, logger, args):
   driver.on_step(lambda tran, _: step.increment())
 
   checkpoint = embodied.Checkpoint(logdir / 'checkpoint.ckpt')
-  # checkpoint.agent = agent
-  # checkpoint.load(embodied.Path(args.logdir) + / 'checkpoint.ckpt', keys=['agent'])
-  
-  # checkpoint = embodied.Checkpoint()
   checkpoint.agent = agent
-  # checkpoint.load(keys=['agent'])
   checkpoint.load(keys=['agent'])
-  # print(f"checkpoint_agent:{checkpoint.agent}")
-  # print(f"checkpoint_agent:{checkpoint.agent}")
   
-  # # original
-  # checkpoint = embodied.Checkpoint()
-  # checkpoint.agent = agent
-  # checkpoint.load(args.from_checkpoint, keys=['agent'])
-
   print('Start evaluation loop.')
   policy = lambda *args: checkpoint.agent.policy(*args, mode='eval')
-  while step < args.steps:
-    driver(policy, steps=100)
+  # print(f"args steps:{args.steps}")
+  # while step < args.steps:
+  while step <= (500 * 100 + 1):
+    # print(f"logger step:{step}")
+    driver(policy, steps=1)
     if should_log(step):
       logger.add(metrics.result())
       logger.add(timer.stats(), prefix='timer')

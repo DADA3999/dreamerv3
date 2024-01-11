@@ -55,15 +55,15 @@ class Driver:
         self._writer = imageio.get_writer(f"./dreamerv3/video{self._video_name_index}.mp4", fps=20)
         self._ep_cnt = 0
         
-      frame = np.squeeze(obs["frontview_image"])
+      frame = np.squeeze(obs["agentview_image"])
       self._writer.append_data(frame)
-      print("frame saved")
+      # print("frame saved")
       if obs['is_last'].any():
         self._writer.append_data(frame)
         self._writer.close()
         self._video_name_index += 1
         self._writer = imageio.get_writer(f"./dreamerv3/video{self._video_name_index}.mp4", fps=20)
-        print("video saved")
+        print(f"video saved {self._video_name_index}")
     
     obs = {k: convert(v) for k, v in obs.items()}
     assert all(len(x) == len(self._env) for x in obs.values()), obs

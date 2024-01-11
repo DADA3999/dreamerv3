@@ -40,7 +40,7 @@ defaults:
     log_keys_sum: '^$'
     log_keys_mean: '(log_entropy)'
     log_keys_max: '^$'
-    from_checkpoint: '~/logdir/run8/checkpoint_3.0M.ckpt'
+    from_checkpoint: '~/logdir/run8/checkpoint.ckpt'
     # from_checkpoint: ''
     sync_every: 10
     # actor_addr: 'tcp://127.0.0.1:5551'

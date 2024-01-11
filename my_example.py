@@ -10,15 +10,15 @@ def main():
     config = config.update(dreamerv3.configs["medium"])
     config = config.update(
         {
-            "logdir": "~/logdir/run8",
+            "logdir": "~/logdir/run1",
             "run.train_ratio": 64,
             "run.log_every": 30,  # Seconds
             "batch_size": 16,
             "jax.prealloc": False,
             "encoder.mlp_keys": "$^",
             "decoder.mlp_keys": "$^",
-            "encoder.cnn_keys": "frontview_image",
-            "decoder.cnn_keys": "frontview_image",
+            "encoder.cnn_keys": "agentview_image",
+            "decoder.cnn_keys": "agentview_image",
             # 'jax.platform': 'cpu',
         }
     )
@@ -33,7 +33,6 @@ def main():
             embodied.logger.JSONLOutput(logdir, "metrics.jsonl"),
             embodied.logger.TensorBoardOutput(logdir),
             # embodied.logger.WandBOutput(logdir.name, config),
-            # embodied.logger.MLFlowOutput(logdir.name),
         ],
     )
 
@@ -45,13 +44,13 @@ def main():
 
     controller_config = suite.load_controller_config(default_controller="OSC_POSE")
     env = suite.make(
-        env_name="NutAssemblyRound",
-        robots="Sawyer",
+        env_name="NutAssemblySquare",
+        robots="Panda",
         controller_configs=controller_config,
         has_renderer=False,
         use_camera_obs=True,
         use_object_obs=False,
-        camera_names="frontview",
+        camera_names="agentview",
         camera_heights=64,
         camera_widths=64,
         reward_shaping=True,
@@ -65,29 +64,29 @@ def main():
     
     # camera_mover = CameraMover(
     #     env=env,
-    #     camera="frontview",
+    #     camera="agentview",
     # )
     # camera_mover.move_camera(direction=[300.0, 3.0, 3.0], scale=1.0)
     # _ = env.reset()
     
-    env = GymWrapper(env, keys=['frontview_image']) # observation_space: Box(0, 255, (64, 64, 3), uint8)
-    env = from_gym.FromGym(env, obs_key='frontview_image')  # Or obs_key='vector'.
+    env = GymWrapper(env, keys=['agentview_image']) # observation_space: Box(0, 255, (64, 64, 3), uint8)
+    env = from_gym.FromGym(env, obs_key='agentview_image')  # Or obs_key='vector'.
     env = dreamerv3.wrap_env(env, config)
     env = embodied.BatchEnv([env], parallel=False)
     
     env_rec = env
 
     agent = dreamerv3.Agent(env.obs_space, env.act_space, step, config)
-    replay = embodied.replay.Uniform(
-        config.batch_length, config.replay_size, logdir / "replay"
-    )
+    # replay = embodied.replay.Uniform(
+    #     config.batch_length, config.replay_size, logdir / "replay"
+    # )
     args = embodied.Config(
         **config.run,
         logdir=config.logdir,
         batch_steps=config.batch_size * config.batch_length
     )
-    embodied.run.train(agent, env, replay, logger, args)
-    # embodied.run.eval_only_record(agent, env, env_rec, logger, args)
+    # embodied.run.train(agent, env, replay, logger, args)
+    embodied.run.eval_only_record(agent, env, env_rec, logger, args)
 
 
 if __name__ == "__main__":
