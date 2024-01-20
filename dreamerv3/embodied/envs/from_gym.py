@@ -13,7 +13,7 @@ class FromGym(embodied.Env):
     else:
       assert not kwargs, kwargs
       self._env = env
-    self._obs_dict = hasattr(self._env.observation_space, 'spaces')
+    self._obs_dict = False
     self._act_dict = hasattr(self._env.action_space, 'spaces')
     self._obs_key = obs_key
     self._act_key = act_key
@@ -28,11 +28,14 @@ class FromGym(embodied.Env):
   def obs_space(self):
     if self._obs_dict:
       spaces = self._flatten(self._env.observation_space.spaces)
-    else:
-      spaces = {self._obs_key: self._env.observation_space}
+    else: # こっちに入る
+      spaces = {}
+      for k, v in zip(self._obs_key, self._env.observation_space):
+        spaces[k] = v
     spaces = {k: self._convert(v) for k, v in spaces.items()}
     return {
         **spaces,
+        # 'robot0_eef_pos': embodied.Space(np.float64, 3),
         'reward': embodied.Space(np.float32),
         'is_first': embodied.Space(bool),
         'is_last': embodied.Space(bool),
@@ -67,8 +70,12 @@ class FromGym(embodied.Env):
 
   def _obs(
       self, obs, reward, is_first=False, is_last=False, is_terminal=False):
-    if not self._obs_dict:
-      obs = {self._obs_key: obs}
+    if not self._obs_dict: # ここに入る
+      obs_tmp = {}
+      for k, v in zip(self._obs_key, obs):
+        obs_tmp[k] = v
+      obs = obs_tmp
+      # print("obs:", obs)
     obs = self._flatten(obs)
     obs = {k: np.asarray(v) for k, v in obs.items()}
     obs.update(

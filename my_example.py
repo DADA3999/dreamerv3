@@ -15,8 +15,10 @@ def main():
             "run.log_every": 30,  # Seconds
             "batch_size": 16,
             "jax.prealloc": False,
-            "encoder.mlp_keys": "$^",
-            "decoder.mlp_keys": "$^",
+            # "encoder.mlp_keys": "$^",
+            # "decoder.mlp_keys": "$^",
+            "encoder.mlp_keys": "robot0_eef_pos",
+            "decoder.mlp_keys": "robot0_eef_pos",
             "encoder.cnn_keys": "agentview_image",
             "decoder.cnn_keys": "agentview_image",
             # 'jax.platform': 'cpu',
@@ -38,7 +40,6 @@ def main():
 
     import robosuite as suite
     from robosuite.wrappers import GymWrapper
-    from robosuite.utils.camera_utils import CameraMover
 
     from dreamerv3.embodied.envs import from_gym
 
@@ -62,31 +63,26 @@ def main():
         ignore_done=False, # BenchmarkだとTrueだが、これしないとhorizon無視して延々と続く
     )
     
-    # camera_mover = CameraMover(
-    #     env=env,
-    #     camera="agentview",
-    # )
-    # camera_mover.move_camera(direction=[300.0, 3.0, 3.0], scale=1.0)
-    # _ = env.reset()
-    
-    env = GymWrapper(env, keys=['agentview_image']) # observation_space: Box(0, 255, (64, 64, 3), uint8)
-    env = from_gym.FromGym(env, obs_key='agentview_image')  # Or obs_key='vector'.
+    env = GymWrapper(env, keys=['agentview_image','robot0_eef_pos']) # obsサイズ指定
+    obs = env.reset()
+    print(obs)
+    env = from_gym.FromGym(env, obs_key=['agentview_image','robot0_eef_pos'])  # obs名前指定
     env = dreamerv3.wrap_env(env, config)
     env = embodied.BatchEnv([env], parallel=False)
-    
-    env_rec = env
 
+    # env_rec = env
+    print(env.obs_space)
     agent = dreamerv3.Agent(env.obs_space, env.act_space, step, config)
-    # replay = embodied.replay.Uniform(
-    #     config.batch_length, config.replay_size, logdir / "replay"
-    # )
+    replay = embodied.replay.Uniform(
+        config.batch_length, config.replay_size, logdir / "replay"
+    )
     args = embodied.Config(
         **config.run,
         logdir=config.logdir,
         batch_steps=config.batch_size * config.batch_length
     )
-    # embodied.run.train(agent, env, replay, logger, args)
-    embodied.run.eval_only_record(agent, env, env_rec, logger, args)
+    embodied.run.train(agent, env, replay, logger, args)
+    # embodied.run.eval_only_record(agent, env, env_rec, logger, args)
 
 
 if __name__ == "__main__":
