@@ -10,17 +10,17 @@ def main():
     config = config.update(dreamerv3.configs["medium"])
     config = config.update(
         {
-            "logdir": "~/logdir/run1",
+            "logdir": "./logdir/run1",
             "run.train_ratio": 64,
             "run.log_every": 30,  # Seconds
-            "batch_size": 16,
+            "batch_size": 8,
             "jax.prealloc": False,
             # "encoder.mlp_keys": "$^",
             # "decoder.mlp_keys": "$^",
-            "encoder.mlp_keys": "robot0_eef_pos",
-            "decoder.mlp_keys": "robot0_eef_pos",
-            "encoder.cnn_keys": "agentview_image",
-            "decoder.cnn_keys": "agentview_image",
+            "encoder.mlp_keys": "robot0_eef_pos|robot0_eef_quat|robot0_gripper_qpos",
+            "decoder.mlp_keys": "robot0_eef_pos|robot0_eef_quat|robot0_gripper_qpos",
+            "encoder.cnn_keys": "agentview_image|robot0_eye_in_hand",
+            "decoder.cnn_keys": "agentview_image|robot0_eye_in_hand",
             # 'jax.platform': 'cpu',
         }
     )
@@ -51,9 +51,9 @@ def main():
         has_renderer=False,
         use_camera_obs=True,
         use_object_obs=False,
-        camera_names="agentview",
-        camera_heights=64,
-        camera_widths=64,
+        camera_names=["agentview", "robot0_eye_in_hand"],
+        camera_heights=[64, 64],
+        camera_widths=[64, 64],
         reward_shaping=True,
         # single_object_mode=1,
         reward_scale=1.0,
@@ -63,10 +63,10 @@ def main():
         ignore_done=False, # BenchmarkだとTrueだが、これしないとhorizon無視して延々と続く
     )
     
-    env = GymWrapper(env, keys=['agentview_image','robot0_eef_pos']) # obsサイズ指定
+    env = GymWrapper(env, keys=['agentview_image', 'robot0_eye_in_hand_image', 'robot0_eef_pos', 'robot0_eef_quat', 'robot0_gripper_qpos']) # obsサイズ指定
     obs = env.reset()
     print(obs)
-    env = from_gym.FromGym(env, obs_key=['agentview_image','robot0_eef_pos'])  # obs名前指定
+    env = from_gym.FromGym(env, obs_key=['agentview_image', 'robot0_eye_in_hand_image','robot0_eef_pos', 'robot0_eef_quat', 'robot0_gripper_qpos'])  # obs名前指定
     env = dreamerv3.wrap_env(env, config)
     env = embodied.BatchEnv([env], parallel=False)
 

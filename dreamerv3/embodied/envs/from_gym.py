@@ -35,7 +35,6 @@ class FromGym(embodied.Env):
     spaces = {k: self._convert(v) for k, v in spaces.items()}
     return {
         **spaces,
-        # 'robot0_eef_pos': embodied.Space(np.float64, 3),
         'reward': embodied.Space(np.float32),
         'is_first': embodied.Space(bool),
         'is_last': embodied.Space(bool),
