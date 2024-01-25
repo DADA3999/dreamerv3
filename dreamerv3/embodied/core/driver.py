@@ -15,7 +15,7 @@ class Driver:
       bool: bool,
   }
 
-  def __init__(self, env, mode, env_rec=None, **kwargs):
+  def __init__(self, env, mode, **kwargs):
     assert len(env) > 0
     self._env = env
     self._mode = mode
@@ -50,20 +50,20 @@ class Driver:
     acts = {k: v for k, v in self._acts.items() if not k.startswith('log_')}
     obs = self._env.step(acts)
     
-    if self._mode == "eval":
-      if self._ep_cnt == -1:
-        self._writer = imageio.get_writer(f"./dreamerv3/video{self._video_name_index}.mp4", fps=20)
-        self._ep_cnt = 0
+    # if self._mode == "eval":
+    #   if self._ep_cnt == -1:
+    #     self._writer = imageio.get_writer(f"./dreamerv3/video{self._video_name_index}.mp4", fps=20)
+    #     self._ep_cnt = 0
         
-      frame = np.squeeze(obs["agentview_image"])
-      self._writer.append_data(frame)
-      # print("frame saved")
-      if obs['is_last'].any():
-        self._writer.append_data(frame)
-        self._writer.close()
-        self._video_name_index += 1
-        self._writer = imageio.get_writer(f"./dreamerv3/video{self._video_name_index}.mp4", fps=20)
-        print(f"video saved {self._video_name_index}")
+    #   frame = np.squeeze(obs["agentview_image"])
+    #   self._writer.append_data(frame)
+    #   # print("frame saved")
+    #   if obs['is_last'].any():
+    #     self._writer.append_data(frame)
+    #     self._writer.close()
+    #     self._video_name_index += 1
+    #     self._writer = imageio.get_writer(f"./dreamerv3/video{self._video_name_index}.mp4", fps=20)
+    #     print(f"video saved {self._video_name_index}")
     
     obs = {k: convert(v) for k, v in obs.items()}
     assert all(len(x) == len(self._env) for x in obs.values()), obs

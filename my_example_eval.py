@@ -19,7 +19,6 @@ def main():
             "decoder.mlp_keys": "robot0_eef_pos|robot0_eef_quat|robot0_gripper_qpos",
             "encoder.cnn_keys": "agentview_image|robot0_eye_in_hand",
             "decoder.cnn_keys": "agentview_image|robot0_eye_in_hand",
-            # 'jax.platform': 'cpu',
         }
     )
     config = embodied.Flags(config).parse()
@@ -30,7 +29,7 @@ def main():
         step,
         [
             embodied.logger.TerminalOutput(),
-            embodied.logger.JSONLOutput(logdir, "metrics.jsonl"),
+            embodied.logger.JSONLOutput(logdir, "metrics_eval_2.5M_cv.jsonl"),
             embodied.logger.TensorBoardOutput(logdir),
             # embodied.logger.WandBOutput(logdir.name, config),
         ],
@@ -53,12 +52,10 @@ def main():
         camera_heights=[64, 64],
         camera_widths=[64, 64],
         reward_shaping=True,
-        # single_object_mode=1,
         reward_scale=1.0,
-        # control_freq=20,
-        horizon=500,
+        # horizon=500,
         hard_reset=False,
-        ignore_done=False, # BenchmarkだとTrueだが、これしないとhorizon無視して延々と続く
+        # ignore_done=False, # BenchmarkだとTrueだが、これしないとhorizon無視して延々と続く
     )
     
     env = GymWrapper(env, keys=['agentview_image', 'robot0_eye_in_hand_image', 'robot0_eef_pos', 'robot0_eef_quat', 'robot0_gripper_qpos']) # obsサイズ指定
@@ -66,17 +63,13 @@ def main():
     env = dreamerv3.wrap_env(env, config)
     env = embodied.BatchEnv([env], parallel=False)
 
-    print(env.obs_space)
     agent = dreamerv3.Agent(env.obs_space, env.act_space, step, config)
-    replay = embodied.replay.Uniform(
-        config.batch_length, config.replay_size, logdir / "replay"
-    )
     args = embodied.Config(
         **config.run,
         logdir=config.logdir,
         batch_steps=config.batch_size * config.batch_length
     )
-    embodied.run.train(agent, env, replay, logger, args)
+    embodied.run.eval_only(agent, env, logger, args)
 
 
 if __name__ == "__main__":

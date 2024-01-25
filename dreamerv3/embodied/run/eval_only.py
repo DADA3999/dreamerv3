@@ -42,7 +42,7 @@ def eval_only(agent, env, logger, args):
         stats[f'max_{key}'] = ep[key].max(0).mean()
     metrics.add(stats, prefix='stats')
 
-  driver = embodied.Driver(env)
+  driver = embodied.Driver(env, mode="eval")
   driver.on_episode(lambda ep, worker: per_episode(ep))
   driver.on_step(lambda tran, _: step.increment())
 
@@ -52,8 +52,8 @@ def eval_only(agent, env, logger, args):
 
   print('Start evaluation loop.')
   policy = lambda *args: agent.policy(*args, mode='eval')
-  while step < args.steps:
-    driver(policy, steps=100)
+  while step <= (501 * 100 + 1): # なぜか501step回ってる
+    driver(policy, steps=1)
     if should_log(step):
       logger.add(metrics.result())
       logger.add(timer.stats(), prefix='timer')

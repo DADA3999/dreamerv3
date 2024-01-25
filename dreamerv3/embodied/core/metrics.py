@@ -36,7 +36,7 @@ class Metrics:
         result[key] = np.nanmean(values, dtype=np.float64)
     reset and self.reset()
     return result
-
+  
   def reset(self):
     self._scalars.clear()
     self._lasts.clear()

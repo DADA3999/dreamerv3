@@ -4,7 +4,7 @@ import embodied
 import numpy as np
 
 
-def eval_only_record(agent, env, env_rec, logger, args):
+def eval_only_record(agent, env, logger, args):
   
   
   logdir = embodied.Path(args.logdir)
@@ -43,7 +43,7 @@ def eval_only_record(agent, env, env_rec, logger, args):
         stats[f'max_{key}'] = ep[key].max(0).mean()
     metrics.add(stats, prefix='stats')
 
-  driver = embodied.Driver(env, mode="eval", env_rec=env_rec)
+  driver = embodied.Driver(env, mode="eval")
   driver.on_episode(lambda ep, worker: per_episode(ep))
   driver.on_step(lambda tran, _: step.increment())
 
@@ -56,7 +56,6 @@ def eval_only_record(agent, env, env_rec, logger, args):
   # print(f"args steps:{args.steps}")
   # while step < args.steps:
   while step <= (500 * 100 + 1):
-    # print(f"logger step:{step}")
     driver(policy, steps=1)
     if should_log(step):
       logger.add(metrics.result())
